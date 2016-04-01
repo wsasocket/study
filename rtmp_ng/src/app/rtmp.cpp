@@ -117,7 +117,7 @@ void rtmp::try_to_send()
         _error("Unable write to client [%x]", ERROR_RTMP_ST_NET_WRITE);
         throw std::runtime_error("Unable write to client");
     }
-
+    written_seq += written;
     send_queue.erase(0, written);
 }
 
@@ -134,19 +134,16 @@ void rtmp::rtmp_send(uint8_t type, uint32_t endpoint, const std::string &buf, un
     set_le32(header.message_streamID, endpoint);
 
     send_queue.append((char *) &header, sizeof header);
-    written_seq += sizeof header;
     size_t pos = 0;
     while (pos < buf.size()){
         if(pos){
             uint8_t flags = (channel_num & 0x3f) | (3 << 6);
             send_queue += char(flags);
-            written_seq += 1;
         }
         size_t chunk = buf.size() - pos;
         if(chunk > chunk_len)
             chunk = chunk_len;
         send_queue.append(buf, pos, chunk);
-        written_seq += chunk;
         pos += chunk;
     }
 
@@ -388,7 +385,6 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
                 continue;
             if(receiver != NULL && receiver->ready){
                 receiver->send_queue.append(buf.data(), headSize + payloadSize);
-                receiver->written_seq += (headSize + payloadSize);
                 receiver->try_to_send();
             }
         }
@@ -426,15 +422,12 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
                     if(timestamp != 0){
                         receiver->send_queue.append(videoPackage.package.data(), videoPackage.package.size());
                         receiver->send_queue.append(audioPackage.package.data(), audioPackage.package.size());
-                        receiver->written_seq += videoPackage.package.size();
-                        receiver->written_seq += audioPackage.package.size();
                         _trace("Time stamp[%d] begin send to client", timestamp);
                         receiver->try_to_send();
                     }
                 }
                 if(receiver->ready){
                     receiver->send_queue.append(buf.data(), headSize + payloadSize);
-                    receiver->written_seq += (headSize + payloadSize);
                     receiver->try_to_send();
                 }
             }
@@ -509,7 +502,10 @@ void rtmp::handle_message(RTMP_Message *msg, int header_len)
             if(pos + 4 > msg->buf.size()){
                 throw std::runtime_error("Not enough data");
             }
+#ifdef __DEBUG__
             read_seq = load_be32(&msg->buf[pos]);
+            _trace("Client ACK,about [%d] bytes in buffer",written_seq - read_seq );
+#endif
             break;
         }
         case MSG_USER_CONTROL:
