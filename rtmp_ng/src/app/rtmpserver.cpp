@@ -38,40 +38,53 @@ rtmp_server::~rtmp_server()
 
 void *rtmp_thread_func (void * param)
 {
-    rtmp * client_ptr = (rtmp *) param;
-    client_ptr->do_poll();
-    client_ptr->close_connect();
-    client_ptr->server_ptr->cleanup(client_ptr);
-    return nullptr;
+    st_netfd_t cli_nfd;
+    struct sockaddr_in from;
+    int fromlen = sizeof(from);
+    rtmp_server * _server = (rtmp_server * ) param;
+
+    while (1){
+         cli_nfd = st_accept(_server->server_net_fd, (struct sockaddr *) &from, &fromlen, ST_UTIME_NO_TIMEOUT);
+         if(cli_nfd == NULL){
+             _error("Can't accept connection: st_accept [%x]",ERROR_ST_ACCEPT);
+             _server->wait_thread --;
+             return nullptr;
+         }
+         _server->busy_thread ++;
+         _server->wait_thread --;
+         st_netfd_setspecific(cli_nfd, &from.sin_addr, NULL);
+         rtmp * client = new rtmp (cli_nfd,_server);
+         _server->client_list.push_back(client);
+         _trace("[Connect] Current wait:[%d] busy:[%d]", _server->wait_thread,_server->busy_thread);
+         client->do_poll();
+         client->close_connect();
+         _server->cleanup(client);
+         _server->busy_thread --;
+         _server->wait_thread ++;
+         _trace("[Disconnect]Current wait:[%d] busy:[%d]", _server->wait_thread,_server->busy_thread);
+         }
 }
+
 
 void rtmp_server::start_thread()
 {
-    st_netfd_t cli_nfd;
-    struct sockaddr_in from;
-    int fromlen = sizeof(from);;
-
-    while (1){
-         cli_nfd = st_accept(server_net_fd, (struct sockaddr *) &from, &fromlen, ST_UTIME_NO_TIMEOUT);
-         if(cli_nfd == NULL){
-             _error("Can't accept connection: st_accept [%x]",ERROR_ST_ACCEPT);
-             return ;
-         }
-         st_netfd_setspecific(cli_nfd, &from.sin_addr, NULL);
-
-         if(current_thread > max_thread){
-             _error("Exceed system limit:[%x]",ERROR_ST_EXCEED_LIMIT);
-             return;
-         }
-         rtmp * client = new rtmp (cli_nfd,this);
-         if(st_thread_create(rtmp_thread_func, (void *) client, 0, 0) == NULL){
-             _error("Process can't create thread [%x]",ERROR_ST_CREATE_THREAD);
-             return ;
-         }
-         current_thread ++;
-         client_list.push_back(client);
-         _info("Total Client:[%d] Current [%x]", current_thread, cli_nfd);
-     }
+    int limit = 0;
+    while(1){
+        if(wait_thread > 1){
+            st_usleep(1000);
+            continue;
+        }
+        limit = (wait_thread + busy_thread +2 < max_thread)?2:(max_thread - wait_thread - busy_thread);
+        for (int i =0;i< limit;i++){
+             if(st_thread_create(rtmp_thread_func, (void *)this, 0, 0) == NULL){
+                 _error("Process can't create thread [%x]",ERROR_ST_CREATE_THREAD);
+                 return ;
+             }
+             wait_thread ++;
+        }
+        _info("Total Thread [%d] created", wait_thread + busy_thread);
+        st_usleep(1000);
+    }
 }
 
 void rtmp_server::cleanup(protocol * client_ptr)
@@ -100,7 +113,5 @@ void rtmp_server::cleanup(protocol * client_ptr)
         }
         delete client_ptr;
         client_ptr = NULL;
-        current_thread --;
     }
-    _trace("Client instance left %d", current_thread);
 }

@@ -26,7 +26,8 @@ public:
 public:
     st_netfd_t server_net_fd;
     int max_thread;
-    int current_thread;
+    int busy_thread;
+    int wait_thread;
 
 public:
     int init_server(char * ip,int port,bool mode);

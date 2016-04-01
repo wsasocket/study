@@ -18,7 +18,8 @@ server::server()
 {
     max_thread = cpu_count() * 8;
     server_net_fd = NULL;
-    current_thread = 0;
+    busy_thread = 0;
+    wait_thread = 0;
 }
 
 server::~server()
