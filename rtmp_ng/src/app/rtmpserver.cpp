@@ -6,7 +6,6 @@
  */
 
 #include "rtmpserver.hpp"
-#include "rtmp.hpp"
 #include<memory.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -15,6 +14,8 @@
 #include <stdlib.h>
 #include <stdexcept>
 #include <st.h>
+
+#include "rtmp.hpp"
 
 rtmp_server::rtmp_server()
 {

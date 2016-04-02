@@ -9,7 +9,7 @@
 #include "rtmp_def.hpp"
 #include <memory.h>
 
-rtmp_handshake::rtmp_handshake(st_netfd_t client_fd):handshake(client_fd)
+rtmp_handshake::rtmp_handshake(st_netfd_t client_fd,int init_phrase):handshake(client_fd,init_phrase)
 {
     remain_data_len = 0;
 }
@@ -21,7 +21,7 @@ rtmp_handshake::~rtmp_handshake()
 
 int rtmp_handshake::process_handshake_protocol(std::string buffer,int len)
 {
-    if(step == HS_Phrase_0){
+    if(phrase == HS_Phrase_0){
         if(len != 1 + sizeof(RTMP_HANDSHAKE))
             return ERROR_RTMP_HANDSHAKE_DATA;
 
@@ -44,11 +44,11 @@ int rtmp_handshake::process_handshake_protocol(std::string buffer,int len)
 
         if(hs_send(&clientsig, sizeof(RTMP_HANDSHAKE)) < sizeof(RTMP_HANDSHAKE))
             return ERROR_RTMP_HANDSHAKE_DATA;
-        step = HS_Phrase_1;
-        return step;
+        phrase = HS_Phrase_1;
+        return phrase;
     }
 
-    if(step == HS_Phrase_1){
+    if(phrase == HS_Phrase_1){
         if(len < sizeof(RTMP_HANDSHAKE))
             return ERROR_RTMP_HANDSHAKE_DATA;
 
@@ -61,13 +61,23 @@ int rtmp_handshake::process_handshake_protocol(std::string buffer,int len)
         if(remain_data_len > 0){
             _trace("%s", "Remain data:");
         }
-        step = HS_Complete;
-        return step;
+        phrase = HS_Complete;
+        return phrase;
     }
-    return step;
+    return phrase;
+}
+
+int rtmp_handshake::do_handshake()
+{
+    return RESULT_SUCCESS;
 }
 
 int rtmp_handshake::get_remain_data_len()
 {
     return remain_data_len;
+}
+
+const char * rtmp_handshake::get_remain_data_ptr()
+{
+    return NULL;
 }

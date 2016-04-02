@@ -20,12 +20,14 @@
 class rtmp_handshake:public handshake
 {
 public:
-    rtmp_handshake(st_netfd_t client_fd);
+    rtmp_handshake(st_netfd_t client_fd,int init_phrase);
     virtual ~rtmp_handshake();
 
 public:
+    int do_handshake();
     int process_handshake_protocol(std::string buf,int len) ;
     int get_remain_data_len();
+    const char * get_remain_data_ptr();
 
 private:
     RTMP_HANDSHAKE serversig;

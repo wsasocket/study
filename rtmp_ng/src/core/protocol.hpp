@@ -16,9 +16,9 @@
 class server;
 /*
  * This class is base class of protocol
- * if derived protocol need hanshake
- * should new handshake class and set_handshake()
- * some protocol like echo can be set NULL
+ * if derived protocol need handshake
+ * some protocol like echo has not handshake
+ * set init_phrase = HS_Complete
  */
 class protocol
 {
@@ -30,7 +30,8 @@ public:
     void do_poll() ;
     void close_connect();
     virtual void parse_protocol() = 0;
-    void set_handshake(handshake * hs_ptr);
+    virtual void parse_handshake_protocol() = 0;
+    virtual handshake * create_handshake(int init_phrase) = 0;
 
 public:
     st_netfd_t st_net_fd;

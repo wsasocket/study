@@ -29,10 +29,12 @@ public:
 
 public:
     void parse_protocol();
+    handshake * create_handshake(int init_phrase);
+    void parse_handshake_protocol();
 
 public:
     rtmp_server * server_ptr;
-    rtmp_handshake * hs;
+    handshake * hs;
     bool playing;
     bool ready;
     RTMP_Message messages[64];

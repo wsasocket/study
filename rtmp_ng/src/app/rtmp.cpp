@@ -5,20 +5,19 @@
  *      Author: james
  */
 
-#include "rtmp.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <memory.h>
 #include <vector>
+#include "rtmp.hpp"
 
 rtmp::rtmp(st_netfd_t client_fd, rtmp_server * srv) :
         protocol(client_fd)
 {
     server_ptr = srv;
-    hs = new rtmp_handshake(client_fd);
-    set_handshake(hs);
+    hs = create_handshake(HS_Phrase_0);
     written_seq = 0;
     read_seq = 0;
     ready = false;
@@ -35,12 +34,18 @@ rtmp::rtmp(st_netfd_t client_fd, rtmp_server * srv) :
 
 rtmp::~rtmp()
 {
-    written_seq = 0;
-    read_seq = 0;
-    ready = false;
-    playing = false;
-    buf.clear();
-    send_queue.clear();
+    if(hs != NULL)
+        delete hs;
+}
+
+void rtmp::parse_handshake_protocol()
+{
+
+}
+
+handshake * rtmp::create_handshake(int init_phrase)
+{
+    return new rtmp_handshake(st_net_fd,init_phrase);
 }
 
 void rtmp::parse_protocol()

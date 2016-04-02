@@ -7,10 +7,12 @@
 
 #include "handshake.hpp"
 #include "common_def.hpp"
-handshake::handshake(st_netfd_t client_fd)
+
+handshake::handshake(st_netfd_t client_fd,int init_phrase)
 {
     st_net_fd = client_fd;
-    step = HS_Phrase_0;
+    phrase = init_phrase;
+    hs_buffer = std::string(MAX_BUF_LEN,0);
 }
 
 handshake::~handshake()
@@ -33,3 +35,8 @@ int handshake::hs_send(const void *buf, int len)
      }
      return pos;
  }
+
+const char * handshake::get_remain_data_ptr()
+{
+    return hs_buffer.data();
+}
