@@ -62,6 +62,12 @@ void *rtmp_thread_func (void * param)
          _server->busy_thread --;
          _server->wait_thread ++;
          _trace("[Disconnect]Current wait:[%d] busy:[%d]", _server->wait_thread,_server->busy_thread);
+         //TODO if wait_thread < throttling can directly return to free st thread
+         if(_server->wait_thread >3)
+         {
+             _server->wait_thread --;
+             return nullptr;
+         }
          }
 }
 
