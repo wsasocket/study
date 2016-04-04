@@ -25,7 +25,6 @@ public:
 public:
     void start_thread();
     friend void *rtmp_thread_func (void * param);
-    void cleanup(protocol * client_ptr);
 
 public:
     rtmp * publisher;

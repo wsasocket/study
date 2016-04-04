@@ -29,8 +29,6 @@ public:
 
 public:
     virtual int do_handshake() = 0;
-    virtual int get_remain_data_len() = 0;
-    const char * get_remain_data_ptr();
 
 public:
     int phrase;
@@ -38,9 +36,8 @@ public:
 protected:
     int hs_send(const void *buf, int len);
 
-private:
+protected:
     st_netfd_t st_net_fd;
-     std::string hs_buffer;
 };
 
 #endif /* SRC_HANDSHAKE_HPP_ */

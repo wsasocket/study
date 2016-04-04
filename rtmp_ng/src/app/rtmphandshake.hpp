@@ -25,14 +25,10 @@ public:
 
 public:
     int do_handshake();
-    int process_handshake_protocol(std::string buf,int len) ;
-    int get_remain_data_len();
-    const char * get_remain_data_ptr();
 
 private:
     RTMP_HANDSHAKE serversig;
     RTMP_HANDSHAKE clientsig;
-    int remain_data_len;
 };
 
 #endif /* SRC_RTMPHANDSHAKE_HPP_ */

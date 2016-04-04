@@ -31,7 +31,6 @@ public:
 public:
     int init_server(char * ip,int port,bool mode);
     void start_server();
-    virtual void cleanup(protocol * client_ptr) = 0;
 
 private:
     int create_listener() ;
