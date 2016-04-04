@@ -19,22 +19,22 @@
  * receive data save in variable "buf"
  * send data should save in variable "send_queue"
  * we can use "st_net_fd" to write data through network
-  */
+ */
 
 class rtmp: public protocol
 {
 public:
-    rtmp(st_netfd_t client_fd,rtmp_server * srv);
+    rtmp(st_netfd_t client_fd, rtmp_server *srv);
     virtual ~rtmp();
 
 public:
     void parse_protocol();
     void parse_handshake_protocol();
     void close_connect();
-    handshake * create_handshake(int init_phrase);
+    handshake *create_handshake(int init_phrase);
 
 public:
-    rtmp_server * server_ptr;
+    rtmp_server *server_ptr;
     bool playing;
     bool ready;
     RTMP_Message messages[64];

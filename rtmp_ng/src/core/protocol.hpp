@@ -27,11 +27,11 @@ public:
     virtual ~protocol();
 
 public:
-    void do_poll() ;
+    void do_poll();
     virtual void close_connect() = 0;
     virtual void parse_protocol() = 0;
     virtual void parse_handshake_protocol() = 0;
-    virtual handshake * create_handshake(int init_phrase) = 0;
+    virtual handshake *create_handshake(int init_phrase) = 0;
 
 public:
     st_netfd_t st_net_fd;

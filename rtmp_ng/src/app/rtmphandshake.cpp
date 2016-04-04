@@ -14,7 +14,6 @@
 rtmp_handshake::rtmp_handshake(st_netfd_t client_fd, int init_phrase) :
         handshake(client_fd, init_phrase)
 {
-
 }
 
 rtmp_handshake::~rtmp_handshake()
@@ -41,7 +40,7 @@ int rtmp_handshake::do_handshake()
 
     //parse section
     if(read_size != 1 + sizeof(RTMP_HANDSHAKE)){
-        _error("C0+C1 = %d",read_size);
+        _error("C0+C1 = %d", read_size);
         throw std::runtime_error("Handshake data overflow at phrase1");
     }
     unsigned char c = recv_buffer[0];

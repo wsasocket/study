@@ -14,13 +14,13 @@
 
 /* This class is derived from class handshake
  * we should implement process_handshake_protocol()
-*  sometimes received data are more than handshake protocol
-*  need.We MUST save remained data for further use.
-*/
-class rtmp_handshake:public handshake
+ *  sometimes received data are more than handshake protocol
+ *  need.We MUST save remained data for further use.
+ */
+class rtmp_handshake: public handshake
 {
 public:
-    rtmp_handshake(st_netfd_t client_fd,int init_phrase);
+    rtmp_handshake(st_netfd_t client_fd, int init_phrase);
     virtual ~rtmp_handshake();
 
 public:

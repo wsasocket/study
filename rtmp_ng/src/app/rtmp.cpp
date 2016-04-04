@@ -52,19 +52,18 @@ void rtmp::close_connect()
         server_ptr->publisher = NULL;
     }
     std::vector<rtmp *>::iterator i;
-     rtmp *player;
-     for (i = server_ptr->client_list.begin(); i != server_ptr->client_list.end(); i++){
-         player = *i;
-         if(player == this)
-         {
-             player->buf.clear();
-             player->send_queue.clear();
-             delete handshake_ptr;
-             handshake_ptr = NULL;
-             server_ptr->client_list.erase(i);
-             break;
-         }
-     }
+    rtmp *player;
+    for (i = server_ptr->client_list.begin(); i != server_ptr->client_list.end(); i++){
+        player = *i;
+        if(player == this){
+            player->buf.clear();
+            player->send_queue.clear();
+            delete handshake_ptr;
+            handshake_ptr = NULL;
+            server_ptr->client_list.erase(i);
+            break;
+        }
+    }
 }
 void rtmp::parse_handshake_protocol()
 {
@@ -94,10 +93,10 @@ void rtmp::parse_protocol()
         // begin parse
         while (!buf.empty()){
             uint8_t flags = buf[0];
-            static const size_t HEADER_LENGTH[] ={12, 8, 4, 1};
+            static const size_t HEADER_LENGTH[] = { 12, 8, 4, 1 };
             size_t header_len = HEADER_LENGTH[flags >> 6];
             if(buf.size() < header_len)
-            break;
+                break;
 
             Chunk_Header header;
             memcpy(&header, buf.data(), header_len);
@@ -120,7 +119,7 @@ void rtmp::parse_protocol()
 
             size_t chunkSize = msg->len - msg->buf.size();
             if(chunkSize > chunk_len)
-            chunkSize = chunk_len;
+                chunkSize = chunk_len;
             if(buf.size() < header_len + chunkSize){
                 break;
             }
@@ -139,7 +138,7 @@ void rtmp::parse_protocol()
 
             msg->buf.append(buf, header_len, chunkSize);
             if(msg->type == MSG_AUDIO || msg->type == MSG_VIDEO)
-            handle_AVPackage(header_len, chunkSize, msg->type, msg->timestamp);
+                handle_AVPackage(header_len, chunkSize, msg->type, msg->timestamp);
 
             buf.erase(0, header_len + chunkSize);
             if(msg->buf.size() == msg->len){
@@ -154,7 +153,7 @@ void rtmp::try_to_send()
 {
     size_t len = send_queue.size();
     if(len > MAX_BUF_LEN)
-    len = MAX_BUF_LEN;
+        len = MAX_BUF_LEN;
 
     ssize_t written = st_write(st_net_fd, send_queue.data(), len, ST_UTIME_NO_TIMEOUT);
     if(written == -1){
@@ -172,7 +171,7 @@ void rtmp::try_to_send()
 void rtmp::rtmp_send(uint8_t type, uint32_t endpoint, const std::string &buf, unsigned long timestamp, int channel_num)
 {
     if(endpoint == STREAM_ID)
-    channel_num = CHAN_STREAM;
+        channel_num = CHAN_STREAM;
 
     Chunk_Header header;
     header.flags = (channel_num & 0x3f) | (0 << 6);
@@ -192,7 +191,7 @@ void rtmp::rtmp_send(uint8_t type, uint32_t endpoint, const std::string &buf, un
         }
         size_t chunk = buf.size() - pos;
         if(chunk > chunk_len)
-        chunk = chunk_len;
+            chunk = chunk_len;
         send_queue.append(buf, pos, chunk);
         written_seq += chunk;
         pos += chunk;
@@ -204,7 +203,7 @@ void rtmp::rtmp_send(uint8_t type, uint32_t endpoint, const std::string &buf, un
 void rtmp::send_reply(double txid, const AMFValue &reply, const AMFValue &status)
 {
     if(txid <= 0.0)
-    return;
+        return;
     Encoder invoke;
     amf_write(&invoke, std::string("_result"));
     amf_write(&invoke, txid);
@@ -265,7 +264,7 @@ void rtmp::handle_connect(double txid, Decoder *dec)
     std::string ver = "(unknown)";
     AMFValue flashver = get(params, std::string("flashVer"));
     if(flashver.type() == AMF_STRING)
-    ver = flashver.as_string();
+        ver = flashver.as_string();
 
     if(app != APP_NAME){
         _error("Application unsupport[%x]", ERROR_RTMP_UNSUPPORT_APP);
@@ -314,7 +313,7 @@ void rtmp::handle_play(double txid, Decoder *dec)
 void rtmp::handle_fcpublish(double txid, Decoder *dec)
 {
     if(server_ptr->publisher != NULL)
-    throw std::runtime_error("Already have a publisher");
+        throw std::runtime_error("Already have a publisher");
     server_ptr->publisher = this;
     _trace("info %s ", "publisher connected.");
 
@@ -427,13 +426,13 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
         }
         if(timestamp != 0){
             if(audioPackage.status != 2)
-            audioPackage.status = 2;
+                audioPackage.status = 2;
         }
         std::vector<rtmp *>::iterator i;
         for (i = server_ptr->client_list.begin(); i != server_ptr->client_list.end(); i++){
             rtmp *receiver = *i;
             if(receiver == this)
-            continue;
+                continue;
             if(receiver != NULL && receiver->ready){
                 receiver->send_queue.append(buf.data(), headSize + payloadSize);
                 receiver->written_seq += (headSize + payloadSize);
@@ -443,7 +442,7 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
     }
     if(MSG_VIDEO == type){
         if(timestamp == 0 && videoPackage.status == 0)
-        videoPackage.package.append(buf.data(), headSize + payloadSize);
+            videoPackage.package.append(buf.data(), headSize + payloadSize);
         if(timestamp == 0 && videoPackage.status == 2){
             videoPackage.package.clear();
             videoPackage.package.append(buf.data(), headSize + payloadSize);
@@ -452,7 +451,7 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
         }
         if(timestamp != 0){
             if(videoPackage.status != 2)
-            videoPackage.status = 2;
+                videoPackage.status = 2;
         }
 
         uint8_t flags = buf[headSize];
@@ -460,7 +459,7 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
         for (i = server_ptr->client_list.begin(); i != server_ptr->client_list.end(); i++){
             rtmp *receiver = *i;
             if(receiver == this)
-            continue;
+                continue;
             if(receiver != NULL){
                 if(flags >> 4 == FLV_KEY_FRAME && !receiver->ready){
                     receiver->cmd_set_chunk_size(this->chunk_len);
@@ -599,7 +598,7 @@ void rtmp::handle_message(RTMP_Message *msg, int header_len)
             dec.pos = 1;
             handle_invoke(msg, &dec);
         }
-        break;
+            break;
         case MSG_NOTIFY_AMF0:
         {
             Decoder dec;
@@ -616,17 +615,17 @@ void rtmp::handle_message(RTMP_Message *msg, int header_len)
             break;
         }
         case MSG_AUDIO:
-        break;
+            break;
         case MSG_VIDEO:
-        break;
+            break;
         case MSG_AGGREGATE_MSG:
-        throw std::runtime_error("streaming FLV not supported");
-        break;
+            throw std::runtime_error("streaming FLV not supported");
+            break;
         default:
-        _trace("Unhandled message: %02x", msg->type)
-        ;
-        hexdump(msg->buf.data(), msg->buf.size());
-        break;
+            _trace("Unhandled message: %02x", msg->type)
+            ;
+            hexdump(msg->buf.data(), msg->buf.size());
+            break;
     }
 }
 

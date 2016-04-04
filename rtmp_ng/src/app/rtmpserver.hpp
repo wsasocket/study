@@ -15,7 +15,7 @@ class rtmp;
 /* This class is derived from class server
  *  in rtmp protocol ,publisher is different from other player
  *  client_list is used to save connected objects
-*/
+ */
 class rtmp_server: public server
 {
 public:
@@ -24,11 +24,11 @@ public:
 
 public:
     void start_thread();
-    friend void *rtmp_thread_func (void * param);
+    friend void *rtmp_thread_func(void *param);
 
 public:
-    rtmp * publisher;
-    std::vector<rtmp* > client_list;
+    rtmp *publisher;
+    std::vector<rtmp *> client_list;
 };
 
 #endif /* SRC_RTMPSERVER_HPP_ */

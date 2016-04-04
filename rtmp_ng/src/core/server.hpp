@@ -16,7 +16,7 @@
 
 /*
  * server class implement all process before accept
-  */
+ */
 class server
 {
 public:
@@ -29,11 +29,11 @@ public:
     int current_thread;
 
 public:
-    int init_server(char * ip,int port,bool mode);
+    int init_server(char *ip, int port, bool mode);
     void start_server();
 
 private:
-    int create_listener() ;
+    int create_listener();
     int cpu_count();
 
 private:

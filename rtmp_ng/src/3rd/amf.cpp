@@ -5,30 +5,30 @@
 #include <arpa/inet.h>
 
 namespace
-{
+    {
 
-uint8_t peek(const Decoder *dec)
-{
-    if(dec->pos >= dec->buf.size()){
-        throw std::runtime_error("Not enough data");
-    }
-    return uint8_t(dec->buf[dec->pos]);
-}
-
-uint8_t get_byte(Decoder *dec)
-{
-    if(dec->version == 0 && peek(dec) == AMF0_SWITCH_AMF3){
-        dec->pos++;
-        dec->version = 3;
+    uint8_t peek(const Decoder *dec)
+    {
+        if(dec->pos >= dec->buf.size()){
+            throw std::runtime_error("Not enough data");
+        }
+        return uint8_t(dec->buf[dec->pos]);
     }
 
-    if(dec->pos >= dec->buf.size()){
-        throw std::runtime_error("Not enough data");
-    }
-    return uint8_t(dec->buf[dec->pos++]);
-}
+    uint8_t get_byte(Decoder *dec)
+    {
+        if(dec->version == 0 && peek(dec) == AMF0_SWITCH_AMF3){
+            dec->pos++;
+            dec->version = 3;
+        }
 
-}
+        if(dec->pos >= dec->buf.size()){
+            throw std::runtime_error("Not enough data");
+        }
+        return uint8_t(dec->buf[dec->pos++]);
+    }
+
+    }
 
 AMFValue::AMFValue(AMFType type) :
         m_type(type)

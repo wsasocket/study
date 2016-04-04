@@ -15,7 +15,6 @@
 #include <stdexcept>
 #include <st.h>
 
-
 #include "rtmp.hpp"
 
 rtmp_server::rtmp_server()
@@ -29,7 +28,7 @@ rtmp_server::~rtmp_server()
     std::vector<rtmp *>::iterator i;
     while (client_list.size() != 0){
         i = client_list.begin();
-        protocol * client = *i;
+        protocol *client = *i;
         st_netfd_close(client->st_net_fd);
         st_netfd_free(client->st_net_fd);
         client_list.erase(i);
@@ -38,9 +37,9 @@ rtmp_server::~rtmp_server()
     _info("RTMP server shutdown");
 }
 
-void *rtmp_thread_func(void * param)
+void *rtmp_thread_func(void *param)
 {
-    rtmp * client_ptr = (rtmp *) param;
+    rtmp *client_ptr = (rtmp *) param;
     client_ptr->do_poll();
     client_ptr->close_connect();
     delete client_ptr;
@@ -53,7 +52,6 @@ void rtmp_server::start_thread()
     st_netfd_t cli_nfd;
     struct sockaddr_in from;
     int fromlen = sizeof(from);
-    ;
 
     while (1){
         cli_nfd = st_accept(server_net_fd, (struct sockaddr *) &from, &fromlen, ST_UTIME_NO_TIMEOUT);
@@ -67,12 +65,12 @@ void rtmp_server::start_thread()
             _error("Exceed system limit:[%x]", ERROR_ST_EXCEED_LIMIT);
             return;
         }
-        rtmp * client = new rtmp(cli_nfd, this);
+        rtmp *client = new rtmp(cli_nfd, this);
         if(st_thread_create(rtmp_thread_func, (void *) client, 0, 0) == NULL){
             _error("Process can't create thread [%x]", ERROR_ST_CREATE_THREAD);
             return;
         }
-        current_thread++;
+        current_thread ++;
         client_list.push_back(client);
         _info("Total Client:[%d] Current [%x]", current_thread, cli_nfd);
     }
