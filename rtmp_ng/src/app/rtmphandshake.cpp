@@ -28,21 +28,19 @@ int rtmp_handshake::do_handshake()
     // HS_Phrase_0;
     while (1){
         read_size = st_read_fully(st_net_fd, &recv_buffer[0], 1 + sizeof(RTMP_HANDSHAKE), SEC2USEC(REQUEST_TIMEOUT));
-        if(read_size == -1 && errno == ETIME){
+        if(read_size == 0)
+        {
+            _error("Network connection from %s is closed.", inet_ntoa(*from));
+            throw std::runtime_error("Network connection lost!");
+        }
+        if(read_size < (1 + sizeof(RTMP_HANDSHAKE)) && errno == ETIME){
+            _trace("C0C1 time out");
             continue;
         }
         break;
     }
-    if(read_size == 0){
-        _error("Network connection from %s is closed.", inet_ntoa(*from));
-        throw std::runtime_error("Network connection lost!");
-    }
 
     //parse section
-    if(read_size != 1 + sizeof(RTMP_HANDSHAKE)){
-        _error("C0+C1 = %d", read_size);
-        throw std::runtime_error("Handshake data overflow at phrase1");
-    }
     unsigned char c = recv_buffer[0];
     memcpy(&clientsig, recv_buffer.data() + 1, sizeof(RTMP_HANDSHAKE));
     if(c != HANDSHAKE_PLAINTEXT){
@@ -66,18 +64,17 @@ int rtmp_handshake::do_handshake()
 //    phrase = HS_Phrase_1;
     while (1){
         read_size = st_read_fully(st_net_fd, &recv_buffer[0], sizeof(RTMP_HANDSHAKE), SEC2USEC(REQUEST_TIMEOUT));
-        if(read_size == -1 && errno == ETIME){
+        if(read_size == 0)
+        {
+            _error("Network connection from %s is closed.", inet_ntoa(*from));
+            throw std::runtime_error("Network connection lost!");
+        }
+        if(read_size < (1 + sizeof(RTMP_HANDSHAKE)) && errno == ETIME){
+            _trace("C0C1 time out");
             continue;
         }
         break;
     }
-    if(read_size == 0){
-        _error("Network connection from %s is closed.", inet_ntoa(*from));
-        throw std::runtime_error("Network connection lost!");
-    }
-
-    if(read_size < sizeof(RTMP_HANDSHAKE))
-        throw std::runtime_error("Handshake data overflow at phrase2");
 
     memcpy(&clientsig, recv_buffer.data(), sizeof(RTMP_HANDSHAKE));
     if(memcmp(serversig.random, clientsig.random, RANDOM_LEN) != 0){
