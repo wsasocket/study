@@ -65,6 +65,7 @@ void rtmp::close_connect()
         }
     }
 }
+
 void rtmp::parse_handshake_protocol()
 {
     handshake_ptr->do_handshake();
@@ -82,13 +83,22 @@ void rtmp::parse_protocol()
     ssize_t read_size;
     while (true){
         read_size = st_read(st_net_fd, &recv_buffer[0], MAX_BUF_LEN, SEC2USEC(REQUEST_TIMEOUT));
-        if(read_size == -1 && errno == ETIME){
-            continue;
-        }
         if(read_size == 0){
             _error("Network connection from %s is closed.", inet_ntoa(*from));
             return;
         }
+        if(read_size == -1){
+            if(errno == ETIME || errno == EINTR){
+                _trace("Read drome %s TIMEOUT", inet_ntoa(*from));
+                continue;
+            }
+            if(errno == EAGAIN){
+                _trace("No data read sleep and read again[%x]", st_net_fd);
+                st_usleep(100 * 1000);
+                continue;
+            }
+        }
+
         buf.append(recv_buffer, 0, read_size);
         // begin parse
         while (!buf.empty()){
@@ -461,6 +471,10 @@ void rtmp::handle_AVPackage(int headSize, int payloadSize, int type, int timesta
             if(receiver == this)
                 continue;
             if(receiver != NULL){
+                if(!receiver->playing){
+                    _trace("Waiting for client[%x] [play] command",st_net_fd);
+                    continue;
+                }
                 if(flags >> 4 == FLV_KEY_FRAME && !receiver->ready){
                     receiver->cmd_set_chunk_size(this->chunk_len);
                     std::string control;

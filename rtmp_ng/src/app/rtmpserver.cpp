@@ -70,7 +70,7 @@ void rtmp_server::start_thread()
             _error("Process can't create thread [%x]", ERROR_ST_CREATE_THREAD);
             return;
         }
-        current_thread ++;
+        current_thread++;
         client_list.push_back(client);
         _info("Total Client:[%d] Current [%x]", current_thread, cli_nfd);
     }

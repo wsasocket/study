@@ -28,12 +28,11 @@ int rtmp_handshake::do_handshake()
     // HS_Phrase_0;
     while (1){
         read_size = st_read_fully(st_net_fd, &recv_buffer[0], 1 + sizeof(RTMP_HANDSHAKE), SEC2USEC(REQUEST_TIMEOUT));
-        if(read_size == 0)
-        {
-            _error("Network connection from %s is closed.", inet_ntoa(*from));
+        if(read_size < (1 + sizeof(RTMP_HANDSHAKE))){
+            _error("Network connection from %s is closed.%d", inet_ntoa(*from),read_size);
             throw std::runtime_error("Network connection lost!");
         }
-        if(read_size < (1 + sizeof(RTMP_HANDSHAKE)) && errno == ETIME){
+        if(read_size == -1 && errno == ETIME){
             _trace("C0C1 time out");
             continue;
         }
@@ -64,13 +63,12 @@ int rtmp_handshake::do_handshake()
 //    phrase = HS_Phrase_1;
     while (1){
         read_size = st_read_fully(st_net_fd, &recv_buffer[0], sizeof(RTMP_HANDSHAKE), SEC2USEC(REQUEST_TIMEOUT));
-        if(read_size == 0)
-        {
-            _error("Network connection from %s is closed.", inet_ntoa(*from));
+        if(read_size <   sizeof(RTMP_HANDSHAKE)){
+            _error("Network connection from %s is closed.%d", inet_ntoa(*from),read_size);
             throw std::runtime_error("Network connection lost!");
         }
-        if(read_size < (1 + sizeof(RTMP_HANDSHAKE)) && errno == ETIME){
-            _trace("C0C1 time out");
+        if(read_size == -1 && errno == ETIME){
+            _trace("S2 time out");
             continue;
         }
         break;
